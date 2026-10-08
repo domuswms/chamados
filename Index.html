@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   WeAxis - Central de chamados
+   Tokens da identidade visual WeAxis (secao 11 do documento de marca),
+   mesmos valores e desvios conscientes da Etiqueta de triagem:
+     - --txt-muted no claro e #5F5F5F: o #BDBDBD da marca da 2,1:1 sobre branco.
+     - legenda e foco em ink no claro: lime sobre branco da 1,13:1.
+     - lime e massa grafica (aba ativa, faixa de resposta, KPI de destaque),
+       nunca texto. Estados (aberto, concluido) usam as cores operacionais do kit.
+   Forma: cards 12px, campos 8px, botoes e chips pill.
+   Tema: segue o sistema (claro/escuro).
+   ============================================================ */
+:root{
+  --wx-lime:#ECFC30;
+  --wx-ink:#212121;
+
+  --font:"Greed Standard","Helvetica Now Display","Inter Tight",Inter,Helvetica,Arial,sans-serif;
+  --r-card:12px;
+  --r-field:8px;
+  --r-pill:999px;
+  --ease:cubic-bezier(.22,1,.36,1);
+
+  color-scheme:light;
+  --shell:#F0F0F0;
+  --panel:#FFFFFF;
+  --panel-2:#F5F5F5;
+  --field:#FFFFFF;
+  --line:#DBDBDB;
+  --line-strong:#BFBFBF;
+  --txt:#212121;
+  --txt-muted:#5F5F5F;
+  --placeholder:#6E6E6E;
+  --legend:#212121;
+  --focus:#212121;
+  --btn-bg:#212121;
+  --btn-txt:#FFFFFF;
+
+  --ok:#1E7F4F;   --ok-bg:#E8F3EC;
+  --warn:#A15C00; --warn-bg:#FBF1E3;
+  --crit:#B3261E; --crit-bg:#FAE9E8;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --shell:#171717;
+    --panel:#212121;
+    --panel-2:#262626;
+    --field:#2E2E2E;
+    --line:#3A3A3A;
+    --line-strong:#4A4A4A;
+    --txt:#F2F2F2;
+    --txt-muted:#BDBDBD;
+    --placeholder:#8C8C8C;
+    --legend:var(--wx-lime);
+    --focus:var(--wx-lime);
+    --btn-bg:var(--wx-lime);
+    --btn-txt:var(--wx-ink);
+
+    --ok:#7FD3A4;   --ok-bg:rgba(127,211,164,.12);
+    --warn:#F2B866; --warn-bg:rgba(242,184,102,.12);
+    --crit:#F28B82; --crit-bg:rgba(242,139,130,.12);
+  }
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--shell);color:var(--txt);
+  font-family:var(--font);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:1ms!important}}
+
+/* ---------- Header ---------- */
+.top{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top-linha{height:68px;display:flex;align-items:center;gap:18px;padding:0 24px;max-width:1100px;margin:0 auto}
+.top .logo{height:26px;width:auto;color:var(--legend);flex:0 0 auto;display:block}
+.top .sep{width:1px;height:26px;background:var(--line);flex:0 0 auto}
+.top h1{margin:0;font-size:15px;font-weight:400;color:var(--txt-muted);white-space:nowrap}
+.top .usuario{margin-left:auto;font-size:13px;color:var(--txt-muted);text-align:right;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.top .usuario b{color:var(--txt);font-weight:500}
+
+nav{display:flex;gap:8px;padding:0 24px 14px;max-width:1100px;margin:0 auto;overflow-x:auto}
+nav button{
+  flex:0 0 auto;font-family:var(--font);font-size:14px;font-weight:500;
+  padding:8px 16px;border-radius:var(--r-pill);border:1px solid var(--line);
+  background:transparent;color:var(--txt);cursor:pointer;
+  transition:border-color .2s var(--ease),background .2s var(--ease);
+}
+nav button:hover{border-color:var(--line-strong)}
+nav button.ativo{background:var(--wx-lime);border-color:var(--wx-lime);color:var(--wx-ink)}
+nav .contador{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:var(--r-pill);
+  background:var(--txt);color:var(--panel);font-size:12px;text-align:center}
+nav button.ativo .contador{background:var(--wx-ink);color:#fff}
+
+/* ---------- Estrutura ---------- */
+main{max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:24px;margin-bottom:14px}
+.eyebrow{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-muted)}
+h2{font-size:26px;font-weight:500;letter-spacing:-0.02em;line-height:1.1;margin:4px 0 0}
+h3{font-size:18px;font-weight:500;letter-spacing:-0.01em;margin:0 0 14px}
+.meta{color:var(--txt-muted);font-size:13px}
+.vazio{color:var(--txt-muted);padding:28px 0}
+
+/* ---------- Formulario ---------- */
+.campo{margin-bottom:18px}
+label.rot{display:block;font-size:12px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--txt-muted);margin:0 0 8px}
+select,textarea,input[type=email]{
+  width:100%;font-family:var(--font);font-size:15px;color:var(--txt);
+  background:var(--field);border:1px solid var(--line-strong);border-radius:var(--r-field);padding:10px 12px;
+}
+select:focus,textarea:focus,input:focus{outline:none;border-color:var(--focus)}
+textarea{min-height:120px;resize:vertical}
+textarea.curto{min-height:84px}
+::placeholder{color:var(--placeholder)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;font-family:var(--font);font-size:15px;font-weight:500;
+  background:var(--btn-bg);color:var(--btn-txt);border:1px solid var(--btn-bg);
+  border-radius:var(--r-pill);padding:11px 24px;cursor:pointer;
+  transition:background .25s var(--ease),color .25s var(--ease),border-color .25s var(--ease);
+}
+.btn:hover{background:var(--wx-lime);color:var(--wx-ink);border-color:var(--wx-lime)}
+.btn.sec{background:transparent;color:var(--txt);border-color:var(--line-strong)}
+.btn.sec:hover{border-color:var(--txt);background:transparent;color:var(--txt)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:disabled:hover{background:var(--btn-bg);color:var(--btn-txt);border-color:var(--btn-bg)}
+.btn.sec:disabled:hover{background:transparent;color:var(--txt);border-color:var(--line-strong)}
+.acoes{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.voltar{background:none;border:0;padding:0;margin:0 0 16px;font-family:var(--font);font-size:14px;
+  color:var(--txt-muted);cursor:pointer}
+.voltar:hover{color:var(--txt)}
+
+/* ---------- Fotos ---------- */
+.picker .linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.picker .hint{font-size:12px;color:var(--txt-muted)}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.thumbs:empty{display:none}
+.thumb{position:relative;width:84px;height:84px;border-radius:var(--r-field);overflow:hidden;
+  border:1px solid var(--line);background:var(--panel-2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .x{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;
+  background:var(--wx-ink);color:#fff;font-size:15px;line-height:24px;padding:0;cursor:pointer}
+.galeria{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.galeria .foto{width:120px;height:120px;padding:0;border:1px solid var(--line);border-radius:var(--r-field);
+  overflow:hidden;background:var(--panel-2);cursor:zoom-in}
+.galeria .foto img{width:100%;height:100%;object-fit:cover;display:block}
+.galeria .foto img:not([src]){visibility:hidden}
+
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:50;display:flex;align-items:center;
+  justify-content:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:4px}
+
+/* ---------- Listas ---------- */
+.item{
+  display:block;width:100%;text-align:left;font-family:var(--font);font-size:15px;color:var(--txt);
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);
+  padding:18px 20px;margin-bottom:10px;cursor:pointer;
+  transition:border-color .2s var(--ease);
+}
+.item:hover{border-color:var(--txt)}
+.item .l1{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.item .tit{font-weight:500}
+.item .tit b{font-weight:700}
+.item .l2{display:block;color:var(--txt-muted);font-size:13px;margin-top:2px}
+.item .resumo{display:block;margin-top:8px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sinal{display:inline-block;margin-top:10px;font-size:12px;font-weight:500;padding:3px 12px;
+  border-radius:var(--r-pill);background:var(--wx-lime);color:var(--wx-ink)}
+
+.badge{flex:0 0 auto;display:inline-block;font-size:12px;font-weight:500;padding:3px 12px;border-radius:var(--r-pill);white-space:nowrap}
+.st-aberto{color:var(--warn);background:var(--warn-bg)}
+.st-andamento{color:var(--txt);border:1px solid var(--line-strong)}
+.st-concluido{color:var(--ok);background:var(--ok-bg)}
+
+.filtros{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.filtros select{width:auto}
+.filtros .rot{margin:0}
+
+/* ---------- Detalhe do chamado ---------- */
+.cab .l1{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.dados{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px 24px;margin-top:20px}
+.dados div span{display:block}
+.dados .v{font-weight:500;word-break:break-word}
+
+.thread{margin:22px 0 0}
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 20px;margin-bottom:10px}
+.msg.atendente{border-left:4px solid var(--wx-lime)}
+.msg.solucao{background:var(--panel-2);border-left:4px solid var(--ok)}
+.msg .topo{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:13px}
+.msg .topo b{font-weight:600;font-size:14px}
+.msg .papel{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-muted)}
+.msg .texto{white-space:pre-wrap;margin-top:6px;word-break:break-word}
+.evento{font-size:13px;color:var(--txt-muted);padding:4px 0 12px 20px;position:relative}
+.evento::before{content:"";position:absolute;left:6px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--txt-muted)}
+
+.notas .linha{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.notas .linha span{min-width:230px}
+.nota-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);background:transparent;
+  color:var(--txt);font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer}
+.nota-btn:hover{border-color:var(--txt)}
+.nota-btn.sel{background:var(--wx-lime);border-color:var(--wx-lime);color:var(--wx-ink)}
+
+/* ---------- Indicadores ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:18px 20px}
+.kpi.destaque{background:var(--wx-lime);border-color:var(--wx-lime);color:var(--wx-ink)}
+.kpi.destaque .rot,.kpi.destaque .sub{color:var(--wx-ink);opacity:.75}
+.kpi .rot{font-size:12px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-muted)}
+.kpi .val{font-size:34px;font-weight:500;letter-spacing:-0.03em;line-height:1.1;margin-top:8px;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:13px;color:var(--txt-muted);margin-top:4px}
+.tabela{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-muted)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- Avisos e rodape ---------- */
+.aviso{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;
+  padding:12px 20px;border-radius:var(--r-pill);background:var(--wx-ink);color:#fff;font-size:14px;
+  max-width:calc(100% - 32px);display:none}
+.aviso.erro{background:var(--crit);color:#fff}
+.carregando{color:var(--txt-muted);padding:48px 0}
+
+footer{max-width:1100px;margin:0 auto;border-top:1px solid var(--line);padding:20px 24px 40px;
+  display:flex;flex-wrap:wrap;gap:10px 24px;color:var(--txt-muted);font-size:13px}
+footer .eixo{color:var(--txt)}
+
+@media (max-width:760px){
+  .top-linha{padding:0 16px;gap:12px}
+  .top h1,.top .sep{display:none}
+  nav{padding:0 16px 12px}
+  main{padding:20px 16px 40px}
+  .card{padding:18px}
+  footer{padding:20px 16px 32px}
+  .notas .linha span{min-width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- Lockup oficial WeAxis, o mesmo vetor da Etiqueta de triagem. -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+<symbol id="wxLockup" viewBox="0 0 705.13 175.97"><g fill="currentColor"><path d="M212.02 35.51L231.07 35.51L244.74 123.09L259.23 35.51L280.23 35.51L294.89 123.09L308.4 35.51L327.44 35.51L307.75 141.32L284.3 141.32L269.65 51.95L254.35 141.32L231.88 141.32L212.02 35.51Z"/><path d="M331.94 103.72L331.94 73.11C331.94 47.55 343.34 33.88 366.94 33.88C389.57 33.88 401.13 46.9 401.13 72.95L401.13 92.65L351.48 92.65L351.48 106.97C351.48 121.3 356.68 127 367.1 127C376.22 127 380.62 122.44 380.94 110.72L381.1 106.56L400.8 106.56L400.8 107.46C400.15 130.42 389.41 142.95 366.94 142.95C343.34 142.95 331.94 129.28 331.94 103.72ZM351.48 78.65L381.59 78.65L381.59 67.9C381.1 54.39 375.89 49.83 366.94 49.83C356.68 49.83 351.48 55.53 351.48 70.02L351.48 78.65Z"/><path d="M458.8 141.32L458.8 126.51C453.75 138.07 444.15 142.95 432.92 142.95C418.43 142.95 408.5 134.65 408.5 116.25C408.5 98.02 421.19 88.9 432.43 83.69L439.75 80.44C449.2 75.88 458.31 71.65 458.31 62.53L458.31 61.06C458.31 54.72 455.06 49.83 445.29 49.83C435.2 49.83 429.99 54.88 429.99 64.81L430.07 70.52L410.86 70.52L410.78 67.58C410.78 47.23 420.87 33.88 445.13 33.88C469.38 33.88 477.36 46.25 477.36 65.3L477.36 141.32L458.8 141.32ZM427.87 113.49C427.87 121.63 431.94 126.02 439.92 126.02C451.15 126.02 458.31 116.25 458.31 99.16L458.31 83.37C456.68 88.09 451.64 90.53 445.45 93.95L439.27 97.21C432.26 101.11 427.87 105.83 427.87 113.49Z"/><path d="M482.61 141.32L508.98 86.62L484.72 35.51L505.56 35.51L521.03 70.34L536.49 35.51L556.19 35.51L531.77 86.62L558.15 141.32L537.31 141.32L519.73 102.9L502.31 141.32L482.61 141.32Z"/><path d="M563.84 35.51L582.88 35.51L582.88 141.32L563.84 141.32L563.84 35.51Z"/><path d="M642.3 84.51C655.65 91.51 661.18 99 661.18 112.67C661.18 128.95 653.2 142.95 627.48 142.95C604.36 142.95 592.81 132.21 592.81 111.53L592.81 106.45L612.34 106.45L612.34 111.21C612.34 122.44 616.9 127 627.64 127C638.06 127 641.64 122.6 641.64 113.81C641.64 106.65 639.2 103.07 629.27 97.21L613.15 88.41C601.11 82.72 594.11 75.23 594.11 61.72C594.11 47.23 602.41 33.88 626.99 33.88C650.27 33.88 660.37 45.27 660.37 63.99L660.25 70.57L640.72 70.57L640.83 64.16C640.83 53.58 636.11 49.83 626.83 49.83C618.53 49.83 613.64 53.41 613.64 60.9C613.64 66.93 616.41 70.18 623.74 74.09L642.3 84.51Z"/><path d="M573.11 0C580.12 0 585.8 5.17 585.8 11.54C585.8 17.91 580.12 23.08 573.11 23.08C566.1 23.08 560.42 17.91 560.42 11.54C560.42 5.17 566.1 0 573.11 0Z"/><path d="M110.09 85.32C127.25 115.25 118.47 152.55 90.49 168.63C62.51 184.72 25.92 173.5 8.77 143.57C-8.38 113.65 0.39 76.35 28.37 60.26C56.35 44.18 92.94 55.4 110.09 85.32Z"/><path d="M181.37 80.18C186.43 114.49 178.47 144.08 163.59 146.28C148.71 148.48 132.55 122.46 127.49 88.15C122.43 53.84 130.39 24.25 145.27 22.05C160.14 19.85 176.31 45.87 181.37 80.18Z"/><path d="M72.74 36.68C39.04 45.73 10 46.64 7.88 38.72C5.76 30.8 31.37 17.06 65.07 8.01C98.77 -1.03 127.81 -1.95 129.93 5.97C132.04 13.89 106.44 27.64 72.74 36.68Z"/><path d="M672.3 62.65L672.3 39.29L666.23 39.29L666.23 35.84L682.56 35.84L682.56 39.29L676.49 39.29L676.49 62.65L672.3 62.65Z"/><path d="M685.15 62.65L685.15 35.84L689.99 35.84L692.84 44.29C694.53 49.05 695.18 52.12 695.18 52.12C695.18 52.12 695.95 49.01 697.48 44.33L700.33 35.84L705.13 35.84L705.13 62.65L701.13 62.65L701.13 51.51C701.02 46.48 701.21 43.33 701.21 43.33C701.21 43.33 700.33 46.44 698.87 51.12L696.83 57.16L693.45 57.16L691.41 51.12C689.8 46.4 689.03 43.33 689.03 43.33C689.03 43.33 689.15 46.55 689.15 51.47L689.15 62.65L685.15 62.65Z"/></g></symbol>
+</svg>
+
+<header class="top">
+  <div class="top-linha">
+    <svg class="logo" viewBox="0 0 705.13 175.97" role="img" aria-label="WeAxis"><use href="#wxLockup"/></svg>
+    <span class="sep" aria-hidden="true"></span>
+    <h1>Central de chamados</h1>
+    <span class="usuario" id="usuario"></span>
+  </div>
+  <nav id="abas" hidden>
+    <button data-aba="abrir" class="ativo">Abrir chamado</button>
+    <button data-aba="meus">Meus chamados</button>
+    <button data-aba="fila" hidden>Fila de atendimento</button>
+    <button data-aba="indicadores" hidden>Indicadores</button>
+  </nav>
+</header>
+
+<main>
+  <div id="carregando" class="carregando">Carregando…</div>
+
+  <!-- Identificação: só aparece se o Google não informar o e-mail -->
+  <section id="tela-email" hidden>
+    <div class="card">
+      <form id="form-email">
+        <div class="campo">
+          <label class="rot" for="email">Seu e-mail corporativo</label>
+          <input id="email" type="email" required placeholder="nome@empresa.com">
+        </div>
+        <button class="btn" type="submit">Continuar</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="tela-abrir" hidden>
+    <div class="card">
+      <h3>Novo chamado</h3>
+      <form id="form-abrir">
+        <div class="campo">
+          <label class="rot" for="tema">Tema</label>
+          <select id="tema" required></select>
+        </div>
+        <div class="campo">
+          <label class="rot" for="descricao">Descrição</label>
+          <textarea id="descricao" required placeholder="Conte o que aconteceu, onde e desde quando."></textarea>
+        </div>
+        <div class="campo picker" data-picker="abrir">
+          <label class="rot">Fotos</label>
+          <div class="linha">
+            <input type="file" accept="image/*" multiple hidden>
+            <button type="button" class="btn sec" data-add-foto>Adicionar fotos</button>
+            <span class="hint">Até 5 fotos</span>
+          </div>
+          <div class="thumbs"></div>
+        </div>
+        <button class="btn" type="submit" id="btn-abrir">Abrir chamado</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="tela-meus" hidden><div id="lista-meus"></div></section>
+
+  <section id="tela-fila" hidden>
+    <div class="filtros">
+      <label class="rot" for="filtro-fila">Mostrar</label>
+      <select id="filtro-fila">
+        <option value="pendentes">Pendentes</option>
+        <option value="Aberto">Abertos</option>
+        <option value="Em atendimento">Em atendimento</option>
+        <option value="Concluído">Concluídos</option>
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+    <div id="lista-fila"></div>
+  </section>
+
+  <section id="tela-indicadores" hidden>
+    <div class="filtros">
+      <label class="rot" for="periodo">Período</label>
+      <select id="periodo">
+        <option value="30">Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="365">Últimos 12 meses</option>
+        <option value="0">Todo o histórico</option>
+      </select>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="card"><h3>Por tema</h3><div class="tabela" id="por-tema"></div></div>
+    <div class="card"><h3>Por atendente</h3><div class="tabela" id="por-atendente"></div></div>
+  </section>
+
+  <section id="tela-detalhe" hidden></section>
+</main>
+
+<footer>
+  <span class="eixo">nós somos o eixo</span>
+  <span>weaxis.com</span>
+</footer>
+
+<div id="lightbox" hidden><img alt="Foto anexada ao chamado"></div>
+<div class="aviso" id="aviso" role="status"></div>
+
+<script>
+  var dados = null;
+  var abaAtual = 'abrir';
+  var abaAnterior = 'meus';
+  var detalhe = null;
+  var emailManual = lerEmailSalvo();
+  var pickers = { abrir: [], resposta: [] };
+  var fotoCache = {};
+  var LIMITE_FOTOS = 5;
+
+  // ---------- utilidades ----------
+  function chamar(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return new Promise(function (ok, falha) {
+      var r = google.script.run.withSuccessHandler(ok).withFailureHandler(falha);
+      r[fn].apply(r, [emailManual].concat(args));
+    });
+  }
+  function lerEmailSalvo() { try { return localStorage.getItem('wx.chamados.email') || ''; } catch (e) { return ''; } }
+  function salvarEmail(v) { try { localStorage.setItem('wx.chamados.email', v); } catch (e) {} }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmtData(ms) {
+    if (!ms) return '—';
+    return new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDur(ms) {
+    if (ms == null || isNaN(ms)) return '—';
+    var min = Math.max(0, Math.round(ms / 60000));
+    if (min < 60) return min + ' min';
+    var h = Math.floor(min / 60), m = min % 60;
+    if (h < 24) return h + 'h' + (m ? ' ' + m + 'min' : '');
+    var d = Math.floor(h / 24), hh = h % 24;
+    return d + 'd' + (hh ? ' ' + hh + 'h' : '');
+  }
+  function media(lista) {
+    if (!lista.length) return null;
+    return lista.reduce(function (a, b) { return a + b; }, 0) / lista.length;
+  }
+  function fmtNota(v) { return v == null ? '—' : v.toFixed(1).replace('.', ','); }
+  function badge(status) {
+    var cls = { 'Aberto': 'st-aberto', 'Em atendimento': 'st-andamento', 'Concluído': 'st-concluido' }[status] || '';
+    return '<span class="badge ' + cls + '">' + esc(status) + '</span>';
+  }
+  function aviso(msg, erro) {
+    var el = document.getElementById('aviso');
+    el.textContent = msg;
+    el.className = 'aviso' + (erro ? ' erro' : '');
+    el.style.display = 'block';
+    clearTimeout(aviso.t);
+    aviso.t = setTimeout(function () { el.style.display = 'none'; }, erro ? 6000 : 3500);
+  }
+  function msgErro(e) { return (e && e.message ? e.message : String(e)).replace(/^Error:\s*/, ''); }
+  function nomeCurto(email) { return email ? email.split('@')[0] : '—'; }
+
+  // ---------- carga e navegação ----------
+  function carregar() {
+    return chamar('getDadosIniciais').then(function (d) {
+      dados = d;
+      document.getElementById('carregando').hidden = true;
+      if (!d.emailDetectado && !emailManual) { document.getElementById('tela-email').hidden = false; return; }
+      document.getElementById('usuario').innerHTML = '<b>' + esc(d.usuario) + '</b>' + (d.ehAtendente ? ' · atendente' : '');
+      document.getElementById('abas').hidden = false;
+      document.querySelector('[data-aba="fila"]').hidden = !d.ehAtendente;
+      document.querySelector('[data-aba="indicadores"]').hidden = !d.ehAtendente;
+      atualizarContadores();
+      preencherTemas();
+      if (abaAtual !== 'detalhe') mostrar(abaAtual);
+    }).catch(function (e) {
+      document.getElementById('carregando').hidden = false;
+      document.getElementById('carregando').textContent = 'Não foi possível carregar: ' + msgErro(e);
+    });
+  }
+
+  function atualizarContadores() {
+    var pendentes = dados.todosChamados.filter(function (c) { return c.status === 'Aberto'; }).length;
+    var b = document.querySelector('[data-aba="fila"]');
+    b.innerHTML = 'Fila de atendimento' + (pendentes ? '<span class="contador">' + pendentes + '</span>' : '');
+  }
+
+  function mostrar(aba) {
+    if (aba !== 'detalhe') abaAnterior = aba;
+    abaAtual = aba;
+    document.querySelectorAll('#abas button').forEach(function (b) {
+      b.classList.toggle('ativo', b.getAttribute('data-aba') === aba);
+    });
+    ['abrir', 'meus', 'fila', 'indicadores', 'detalhe'].forEach(function (a) {
+      document.getElementById('tela-' + a).hidden = a !== aba;
+    });
+    if (aba === 'meus') renderMeus();
+    if (aba === 'fila') renderFila();
+    if (aba === 'indicadores') renderIndicadores();
+    if (aba === 'detalhe') renderDetalhe();
+  }
+
+  function preencherTemas() {
+    var sel = document.getElementById('tema');
+    var atual = sel.value;
+    sel.innerHTML = '<option value="">Selecione o tema</option>' + dados.temas.map(function (t) {
+      return '<option>' + esc(t) + '</option>';
+    }).join('');
+    sel.value = atual;
+  }
+
+  // ---------- Listas ----------
+  function itemLista(c, sinal, mostrarSolicitante) {
+    var l2 = 'Aberto em ' + fmtData(c.abertoEm);
+    if (mostrarSolicitante) l2 += ' · ' + esc(c.solicitante);
+    if (c.atendente) l2 += ' · atendente ' + esc(nomeCurto(c.atendente));
+    return '<button class="item" data-abrir="' + esc(c.id) + '">' +
+      '<span class="l1"><span class="tit"><b>' + esc(c.id) + '</b> · ' + esc(c.tema) + '</span>' + badge(c.status) + '</span>' +
+      '<span class="l2">' + l2 + '</span>' +
+      '<span class="resumo">' + esc(c.descricao) + '</span>' +
+      (sinal ? '<span class="sinal">' + sinal + '</span>' : '') +
+      '</button>';
+  }
+
+  function renderMeus() {
+    var lista = dados.meusChamados.slice().sort(function (a, b) { return b.abertoEm - a.abertoEm; });
+    var el = document.getElementById('lista-meus');
+    if (!lista.length) { el.innerHTML = '<div class="vazio">Nenhum chamado aberto por você. Use a aba Abrir chamado.</div>'; return; }
+    el.innerHTML = lista.map(function (c) {
+      var sinal = '';
+      if (c.status === 'Concluído' && !c.avaliadoEm) sinal = 'Avalie o atendimento';
+      else if (c.status !== 'Concluído' && c.ultimaResposta === 'Atendente') sinal = 'Nova resposta do atendimento';
+      return itemLista(c, sinal, false);
+    }).join('');
+  }
+
+  function renderFila() {
+    var filtro = document.getElementById('filtro-fila').value;
+    var lista = dados.todosChamados.filter(function (c) {
+      if (filtro === 'todos') return true;
+      if (filtro === 'pendentes') return c.status !== 'Concluído';
+      return c.status === filtro;
+    });
+    var recentesPrimeiro = filtro === 'Concluído' || filtro === 'todos';
+    lista.sort(function (a, b) { return recentesPrimeiro ? b.abertoEm - a.abertoEm : a.abertoEm - b.abertoEm; });
+    var el = document.getElementById('lista-fila');
+    if (!lista.length) { el.innerHTML = '<div class="vazio">Nenhum chamado neste filtro.</div>'; return; }
+    el.innerHTML = lista.map(function (c) {
+      var sinal = '';
+      if (c.status === 'Aberto') sinal = 'Aguardando há ' + fmtDur(Date.now() - c.abertoEm);
+      else if (c.status === 'Em atendimento' && c.ultimaResposta === 'Solicitante') sinal = 'Solicitante respondeu';
+      return itemLista(c, sinal, true);
+    }).join('');
+  }
+
+  // ---------- Detalhe do chamado ----------
+  function abrirDetalhe(id) {
+    detalhe = null;
+    pickers.resposta = [];
+    mostrar('detalhe');
+    document.getElementById('tela-detalhe').innerHTML = '<div class="carregando">Carregando chamado…</div>';
+    chamar('getChamado', id).then(function (d) { detalhe = d; renderDetalhe(); })
+      .catch(function (e) { aviso(msgErro(e), true); mostrar(abaAnterior); });
+  }
+
+  function renderDetalhe() {
+    if (!detalhe) return;
+    var c = detalhe.chamado;
+    var souSolicitante = c.solicitante === dados.usuario;
+    var souAtendente = dados.ehAtendente;
+    var concluido = c.status === 'Concluído';
+
+    var html = '<button class="voltar" data-voltar>← Voltar</button>';
+
+    html += '<div class="card cab"><div class="l1"><div><div class="eyebrow">' + esc(c.tema) + '</div>' +
+      '<h2>' + esc(c.id) + '</h2></div>' + badge(c.status) + '</div><div class="dados">' +
+      dado('Solicitante', c.solicitante) +
+      dado('Atendente', c.atendente || 'Ainda não assumido') +
+      dado('Aberto em', fmtData(c.abertoEm)) +
+      (concluido ? dado('Concluído em', fmtData(c.concluidoEm)) + dado('Tempo de atendimento', fmtDur(c.concluidoEm - c.abertoEm)) : '') +
+      '</div></div>';
+
+    html += '<div class="thread">' + montarHistorico(c, detalhe.mensagens).map(renderItemHistorico).join('') + '</div>';
+
+    if (!concluido && (souSolicitante || souAtendente)) {
+      html += '<div class="card"><h3>Responder</h3>' +
+        '<div class="campo"><textarea id="resposta" class="curto" placeholder="Escreva sua resposta."></textarea></div>' +
+        '<div class="campo picker" data-picker="resposta"><div class="linha">' +
+        '<input type="file" accept="image/*" multiple hidden>' +
+        '<button type="button" class="btn sec" data-add-foto>Adicionar fotos</button><span class="hint">Até 5 fotos</span></div>' +
+        '<div class="thumbs"></div></div>' +
+        '<button class="btn" data-acao="responder">Enviar resposta</button></div>';
+    }
+
+    if (souAtendente && c.status === 'Aberto') {
+      html += '<div class="card"><h3>Atendimento</h3><div class="meta">Ao assumir, você passa a ser o responsável por este chamado.</div>' +
+        '<div class="acoes"><button class="btn" data-acao="assumir">Assumir atendimento</button></div></div>';
+    }
+    if (souAtendente && c.status === 'Em atendimento') {
+      html += '<div class="card"><h3>Concluir chamado</h3>' +
+        '<div class="campo"><label class="rot" for="solucao">Solução</label>' +
+        '<textarea id="solucao" class="curto" placeholder="O que foi feito para resolver."></textarea></div>' +
+        '<button class="btn" data-acao="concluir">Concluir chamado</button></div>';
+    }
+
+    if (souSolicitante && concluido && !c.avaliadoEm) {
+      html += '<div class="card notas"><h3>Avalie o atendimento</h3>' +
+        '<div class="meta" style="margin-bottom:14px">1 é péssimo, 5 é excelente.</div>' +
+        linhaNota('qualidade', 'Qualidade do atendimento') +
+        linhaNota('satisfacao', 'Satisfação com o atendimento') +
+        '<div class="acoes"><button class="btn" data-acao="avaliar">Enviar avaliação</button></div></div>';
+    } else if (c.avaliadoEm) {
+      html += '<div class="card"><div class="eyebrow">Avaliação do solicitante</div>' +
+        '<div style="margin-top:6px">Qualidade <b>' + c.notaQualidade + '/5</b> · Satisfação <b>' + c.notaSatisfacao + '/5</b></div></div>';
+    } else if (concluido && !souSolicitante) {
+      html += '<div class="meta">Aguardando a avaliação do solicitante.</div>';
+    }
+
+    var tela = document.getElementById('tela-detalhe');
+    tela.innerHTML = html;
+    renderThumbs('resposta');
+    carregarFotos(tela);
+  }
+
+  function dado(rot, valor) {
+    return '<div><span class="eyebrow">' + rot + '</span><span class="v">' + esc(valor) + '</span></div>';
+  }
+
+  function montarHistorico(c, mensagens) {
+    var itens = [{ tipo: 'msg', data: c.abertoEm, autor: c.solicitante, papel: 'Solicitante', texto: c.descricao, fotos: c.fotos, ordem: 0 }];
+    if (c.iniciadoEm) itens.push({ tipo: 'evento', data: c.iniciadoEm, texto: nomeCurto(c.atendente) + ' assumiu o atendimento', ordem: 1 });
+    mensagens.forEach(function (m) {
+      itens.push({ tipo: 'msg', data: m.data, autor: m.autor, papel: m.papel, texto: m.texto, fotos: m.fotos, ordem: 2 });
+    });
+    if (c.concluidoEm) itens.push({ tipo: 'solucao', data: c.concluidoEm, autor: c.atendente, texto: c.solucao, ordem: 3 });
+    return itens.sort(function (a, b) { return a.data - b.data || a.ordem - b.ordem; });
+  }
+
+  function renderItemHistorico(i) {
+    if (i.tipo === 'evento') return '<div class="evento">' + esc(i.texto) + ' · ' + fmtData(i.data) + '</div>';
+    if (i.tipo === 'solucao') {
+      return '<div class="msg solucao"><div class="topo"><span class="papel">Solução</span><b>' + esc(nomeCurto(i.autor)) + '</b>' +
+        '<span class="meta">' + fmtData(i.data) + '</span></div><div class="texto">' + esc(i.texto) + '</div></div>';
+    }
+    var galeria = (i.fotos && i.fotos.length) ? '<div class="galeria">' + i.fotos.map(function (id) {
+      return '<button class="foto" data-foto="' + esc(id) + '" aria-label="Ampliar foto"><img alt="Foto anexada"></button>';
+    }).join('') + '</div>' : '';
+    return '<div class="msg ' + (i.papel === 'Atendente' ? 'atendente' : '') + '"><div class="topo">' +
+      '<b>' + esc(i.autor) + '</b><span class="papel">' + esc(i.papel) + '</span><span class="meta">' + fmtData(i.data) + '</span></div>' +
+      (i.texto ? '<div class="texto">' + esc(i.texto) + '</div>' : '') + galeria + '</div>';
+  }
+
+  function linhaNota(tipo, rotulo) {
+    var b = '';
+    for (var i = 1; i <= 5; i++) b += '<button class="nota-btn" data-nota="' + tipo + '" data-valor="' + i + '">' + i + '</button>';
+    return '<div class="linha"><span>' + rotulo + '</span>' + b + '</div>';
+  }
+
+  // ---------- Fotos ----------
+  function carregarFotos(raiz) {
+    raiz.querySelectorAll('[data-foto]').forEach(function (b) {
+      var id = b.getAttribute('data-foto');
+      var img = b.querySelector('img');
+      var p = fotoCache[id] || (fotoCache[id] = chamar('getFoto', id));
+      p.then(function (src) { img.src = src; }).catch(function () { delete fotoCache[id]; b.title = 'Foto indisponível'; });
+    });
+  }
+
+  function prepararFoto(arquivo) {
+    return new Promise(function (ok, falha) {
+      if (!/^image\//.test(arquivo.type)) { falha(new Error(arquivo.name + ' não é uma imagem.')); return; }
+      var url = URL.createObjectURL(arquivo);
+      var img = new Image();
+      img.onload = function () {
+        var max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        var cv = document.createElement('canvas');
+        cv.width = Math.round(img.naturalWidth * k);
+        cv.height = Math.round(img.naturalHeight * k);
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        ok({ nome: arquivo.name, dados: cv.toDataURL('image/jpeg', 0.82) });
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); falha(new Error('Não foi possível ler ' + arquivo.name + '. Use JPG ou PNG.')); };
+      img.src = url;
+    });
+  }
+
+  function renderThumbs(chave) {
+    var box = document.querySelector('[data-picker="' + chave + '"] .thumbs');
+    if (!box) return;
+    box.innerHTML = pickers[chave].map(function (f, i) {
+      return '<div class="thumb"><img src="' + f.dados + '" alt="' + esc(f.nome) + '">' +
+        '<button type="button" class="x" data-remover="' + i + '" aria-label="Remover foto">×</button></div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', function (e) {
+    var add = e.target.closest('[data-add-foto]');
+    if (add) { add.closest('.picker').querySelector('input[type=file]').click(); return; }
+    var rem = e.target.closest('[data-remover]');
+    if (rem) {
+      var chave = rem.closest('.picker').getAttribute('data-picker');
+      pickers[chave].splice(Number(rem.getAttribute('data-remover')), 1);
+      renderThumbs(chave);
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.type !== 'file') return;
+    var chave = e.target.closest('.picker').getAttribute('data-picker');
+    var arquivos = Array.prototype.slice.call(e.target.files);
+    e.target.value = '';
+    var espaco = LIMITE_FOTOS - pickers[chave].length;
+    if (arquivos.length > espaco) aviso('Limite de ' + LIMITE_FOTOS + ' fotos por envio.', true);
+    Promise.all(arquivos.slice(0, Math.max(0, espaco)).map(prepararFoto))
+      .then(function (fotos) { pickers[chave] = pickers[chave].concat(fotos); renderThumbs(chave); })
+      .catch(function (err) { aviso(msgErro(err), true); });
+  });
+
+  // ---------- Indicadores ----------
+  function resumo(lista) {
+    var iniciados = lista.filter(function (c) { return c.iniciadoEm; });
+    var concluidos = lista.filter(function (c) { return c.concluidoEm; });
+    var avaliados = lista.filter(function (c) { return c.avaliadoEm; });
+    return {
+      total: lista.length,
+      pendentes: lista.length - concluidos.length,
+      concluidos: concluidos.length,
+      avaliados: avaliados.length,
+      espera: media(iniciados.map(function (c) { return c.iniciadoEm - c.abertoEm; })),
+      resolucao: media(concluidos.map(function (c) { return c.concluidoEm - c.abertoEm; })),
+      qualidade: media(avaliados.map(function (c) { return c.notaQualidade; })),
+      satisfacao: media(avaliados.map(function (c) { return c.notaSatisfacao; }))
+    };
+  }
+
+  function renderIndicadores() {
+    var dias = Number(document.getElementById('periodo').value);
+    var desde = dias ? Date.now() - dias * 86400000 : 0;
+    var lista = dados.todosChamados.filter(function (c) { return c.abertoEm >= desde; });
+    var r = resumo(lista);
+
+    function kpi(rot, val, sub, destaque) {
+      return '<div class="kpi' + (destaque ? ' destaque' : '') + '"><div class="rot">' + rot + '</div><div class="val">' + val + '</div>' +
+             (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div>';
+    }
+    document.getElementById('kpis').innerHTML =
+      kpi('Tempo médio de atendimento', fmtDur(r.resolucao), 'da abertura até a conclusão', true) +
+      kpi('Chamados abertos', r.total, r.pendentes + ' pendentes · ' + r.concluidos + ' concluídos') +
+      kpi('Tempo médio até início', fmtDur(r.espera), 'da abertura até alguém assumir') +
+      kpi('Qualidade média', fmtNota(r.qualidade) + (r.qualidade == null ? '' : ' / 5'), r.avaliados + ' avaliações') +
+      kpi('Satisfação média', fmtNota(r.satisfacao) + (r.satisfacao == null ? '' : ' / 5'), r.avaliados + ' avaliações');
+
+    document.getElementById('por-tema').innerHTML = tabelaAgrupada(lista, 'tema', 'Tema');
+    document.getElementById('por-atendente').innerHTML = tabelaAgrupada(
+      lista.filter(function (c) { return c.atendente; }), 'atendente', 'Atendente');
+  }
+
+  function tabelaAgrupada(lista, campo, rotulo) {
+    var grupos = {};
+    lista.forEach(function (c) { (grupos[c[campo]] = grupos[c[campo]] || []).push(c); });
+    var chaves = Object.keys(grupos).sort(function (a, b) { return grupos[b].length - grupos[a].length; });
+    if (!chaves.length) return '<div class="vazio">Nenhum chamado no período. Ajuste o filtro de datas.</div>';
+    return '<table><thead><tr><th>' + rotulo + '</th><th class="n">Chamados</th><th class="n">Concluídos</th>' +
+      '<th class="n">Tempo médio de atendimento</th><th class="n">Qualidade</th><th class="n">Satisfação</th></tr></thead><tbody>' +
+      chaves.map(function (k) {
+        var r = resumo(grupos[k]);
+        return '<tr><td>' + esc(k) + '</td><td class="n">' + r.total + '</td><td class="n">' + r.concluidos + '</td>' +
+               '<td class="n">' + fmtDur(r.resolucao) + '</td><td class="n">' + fmtNota(r.qualidade) + '</td>' +
+               '<td class="n">' + fmtNota(r.satisfacao) + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // ---------- eventos ----------
+  document.getElementById('abas').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-aba]');
+    if (b) mostrar(b.getAttribute('data-aba'));
+  });
+
+  document.getElementById('form-email').addEventListener('submit', function (e) {
+    e.preventDefault();
+    emailManual = document.getElementById('email').value.trim().toLowerCase();
+    salvarEmail(emailManual);
+    document.getElementById('tela-email').hidden = true;
+    document.getElementById('carregando').hidden = false;
+    carregar();
+  });
+
+  document.getElementById('form-abrir').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var btn = document.getElementById('btn-abrir');
+    btn.disabled = true;
+    btn.textContent = pickers.abrir.length ? 'Enviando fotos…' : 'Abrindo…';
+    chamar('abrirChamado', document.getElementById('tema').value, document.getElementById('descricao').value, pickers.abrir)
+      .then(function (c) {
+        document.getElementById('form-abrir').reset();
+        pickers.abrir = [];
+        renderThumbs('abrir');
+        aviso('Chamado ' + c.id + ' aberto. Acompanhe as respostas por aqui.');
+        abaAnterior = 'meus';
+        carregar();
+        abrirDetalhe(c.id);
+      })
+      .catch(function (e) { aviso(msgErro(e), true); })
+      .then(function () { btn.disabled = false; btn.textContent = 'Abrir chamado'; });
+  });
+
+  document.getElementById('filtro-fila').addEventListener('change', renderFila);
+  document.getElementById('periodo').addEventListener('change', renderIndicadores);
+
+  var lightbox = document.getElementById('lightbox');
+  lightbox.addEventListener('click', function () { lightbox.hidden = true; });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') lightbox.hidden = true; });
+
+  document.querySelector('main').addEventListener('click', function (e) {
+    var item = e.target.closest('[data-abrir]');
+    if (item) { abrirDetalhe(item.getAttribute('data-abrir')); return; }
+    if (e.target.closest('[data-voltar]')) { detalhe = null; mostrar(abaAnterior); return; }
+
+    var foto = e.target.closest('[data-foto]');
+    if (foto) {
+      var src = foto.querySelector('img').getAttribute('src');
+      if (src) { lightbox.querySelector('img').src = src; lightbox.hidden = false; }
+      return;
+    }
+    var nota = e.target.closest('.nota-btn');
+    if (nota) {
+      nota.parentNode.querySelectorAll('.nota-btn').forEach(function (b) { b.classList.toggle('sel', b === nota); });
+      return;
+    }
+
+    var btn = e.target.closest('button[data-acao]');
+    if (!btn || !detalhe) return;
+    var id = detalhe.chamado.id;
+    var acao = btn.getAttribute('data-acao');
+    var promessa, ok;
+
+    if (acao === 'responder') {
+      promessa = chamar('responderChamado', id, document.getElementById('resposta').value, pickers.resposta);
+      ok = 'Resposta enviada.';
+    } else if (acao === 'assumir') {
+      promessa = chamar('iniciarAtendimento', id);
+      ok = 'Você assumiu o chamado ' + id + '.';
+    } else if (acao === 'concluir') {
+      promessa = chamar('concluirChamado', id, document.getElementById('solucao').value);
+      ok = 'Chamado ' + id + ' concluído.';
+    } else if (acao === 'avaliar') {
+      var q = document.querySelector('.sel[data-nota="qualidade"]');
+      var s = document.querySelector('.sel[data-nota="satisfacao"]');
+      if (!q || !s) { aviso('Escolha uma nota para qualidade e outra para satisfação.', true); return; }
+      promessa = chamar('avaliarChamado', id, Number(q.getAttribute('data-valor')), Number(s.getAttribute('data-valor')));
+      ok = 'Avaliação registrada. Obrigado.';
+    }
+    var rotulo = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+    promessa.then(function (d) {
+      detalhe = d;
+      pickers.resposta = [];
+      renderDetalhe();
+      aviso(ok);
+      carregar();
+    }).catch(function (err) {
+      aviso(msgErro(err), true);
+      btn.disabled = false;
+      btn.textContent = rotulo;
+    });
+  });
+
+  carregar();
+</script>
+</body>
+</html>
