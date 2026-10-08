@@ -147,6 +147,8 @@ textarea.curto{min-height:84px}
 /* ---------- Fotos ---------- */
 .picker .linha{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .picker .hint{font-size:12px;color:var(--txt-muted)}
+/* "Tirar foto" so aparece em tela de toque (celular e tablet). */
+@media (hover:hover) and (pointer:fine){.so-toque{display:none}}
 .thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .thumbs:empty{display:none}
 .thumb{position:relative;width:84px;height:84px;border-radius:var(--r-field);overflow:hidden;
@@ -302,9 +304,11 @@ footer .eixo{color:var(--txt)}
         <div class="campo picker" data-picker="abrir">
           <label class="rot">Fotos</label>
           <div class="linha">
-            <input type="file" accept="image/*" multiple hidden>
-            <button type="button" class="btn sec" data-add-foto>Adicionar fotos</button>
-            <span class="hint">Até 5 fotos</span>
+            <input type="file" accept="image/*" capture="environment" data-entrada="camera" hidden>
+            <input type="file" accept="image/*,.heic,.heif" multiple data-entrada="arquivo" hidden>
+            <button type="button" class="btn sec so-toque" data-add-foto="camera">Tirar foto</button>
+            <button type="button" class="btn sec" data-add-foto="arquivo">Adicionar fotos</button>
+            <span class="hint">Até 5 fotos · JPG, PNG ou HEIC</span>
           </div>
           <div class="thumbs"></div>
         </div>
@@ -539,8 +543,11 @@ footer .eixo{color:var(--txt)}
       html += '<div class="card"><h3>Responder</h3>' +
         '<div class="campo"><textarea id="resposta" class="curto" placeholder="Escreva sua resposta."></textarea></div>' +
         '<div class="campo picker" data-picker="resposta"><div class="linha">' +
-        '<input type="file" accept="image/*" multiple hidden>' +
-        '<button type="button" class="btn sec" data-add-foto>Adicionar fotos</button><span class="hint">Até 5 fotos</span></div>' +
+        '<input type="file" accept="image/*" capture="environment" data-entrada="camera" hidden>' +
+        '<input type="file" accept="image/*,.heic,.heif" multiple data-entrada="arquivo" hidden>' +
+        '<button type="button" class="btn sec so-toque" data-add-foto="camera">Tirar foto</button>' +
+        '<button type="button" class="btn sec" data-add-foto="arquivo">Adicionar fotos</button>' +
+        '<span class="hint">Até 5 fotos · JPG, PNG ou HEIC</span></div>' +
         '<div class="thumbs"></div></div>' +
         '<button class="btn" data-acao="responder">Enviar resposta</button></div>';
     }
@@ -619,25 +626,55 @@ footer .eixo{color:var(--txt)}
     });
   }
 
-  function prepararFoto(arquivo) {
+  // Toda foto vira JPEG de até 1600 px antes do envio: fica leve e abre em qualquer navegador.
+  // HEIC (padrão do iPhone) só o Safari lê nativamente; nos outros, o conversor é carregado sob demanda.
+  var HEIC2ANY_URL = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+  var conversorHeic = null;
+  var fotosEmPreparo = 0;
+
+  function ehHeic(a) { return /hei[cf]/i.test(a.type) || /\.hei[cf]$/i.test(a.name); }
+  function ehFoto(a) { return /^image\//.test(a.type) || ehHeic(a) || /\.(jpe?g|png|webp|gif|bmp)$/i.test(a.name); }
+
+  function lerImagem(blob) {
     return new Promise(function (ok, falha) {
-      if (!/^image\//.test(arquivo.type)) { falha(new Error(arquivo.name + ' não é uma imagem.')); return; }
-      var url = URL.createObjectURL(arquivo);
+      var url = URL.createObjectURL(blob);
       var img = new Image();
-      img.onload = function () {
-        var max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-        var cv = document.createElement('canvas');
-        cv.width = Math.round(img.naturalWidth * k);
-        cv.height = Math.round(img.naturalHeight * k);
-        var ctx = cv.getContext('2d');
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0, 0, cv.width, cv.height);
-        ctx.drawImage(img, 0, 0, cv.width, cv.height);
-        URL.revokeObjectURL(url);
-        ok({ nome: arquivo.name, dados: cv.toDataURL('image/jpeg', 0.82) });
-      };
-      img.onerror = function () { URL.revokeObjectURL(url); falha(new Error('Não foi possível ler ' + arquivo.name + '. Use JPG ou PNG.')); };
+      img.onload = function () { URL.revokeObjectURL(url); ok(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); falha(new Error('ilegível')); };
       img.src = url;
+    });
+  }
+
+  function converterHeic(arquivo) {
+    conversorHeic = conversorHeic || new Promise(function (ok, falha) {
+      var s = document.createElement('script');
+      s.src = HEIC2ANY_URL;
+      s.onload = function () { ok(window.heic2any); };
+      s.onerror = function () { conversorHeic = null; falha(new Error('Não foi possível carregar o conversor de HEIC. Verifique a internet e tente de novo.')); };
+      document.head.appendChild(s);
+    });
+    return conversorHeic.then(function (heic2any) {
+      return heic2any({ blob: arquivo, toType: 'image/jpeg', quality: 0.9 }).then(
+        function (r) { return Array.isArray(r) ? r[0] : r; },
+        function () { throw new Error('Não foi possível converter ' + arquivo.name + '.'); });
+    });
+  }
+
+  function prepararFoto(arquivo) {
+    if (!ehFoto(arquivo)) return Promise.reject(new Error(arquivo.name + ' não é uma foto.'));
+    return lerImagem(arquivo).catch(function () {
+      if (!ehHeic(arquivo)) throw new Error('Não foi possível ler ' + arquivo.name + '. Use JPG, PNG ou HEIC.');
+      return converterHeic(arquivo).then(lerImagem);
+    }).then(function (img) {
+      var max = 1600, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      var cv = document.createElement('canvas');
+      cv.width = Math.round(img.naturalWidth * k);
+      cv.height = Math.round(img.naturalHeight * k);
+      var ctx = cv.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      return { nome: arquivo.name, dados: cv.toDataURL('image/jpeg', 0.82) };
     });
   }
 
@@ -652,7 +689,10 @@ footer .eixo{color:var(--txt)}
 
   document.addEventListener('click', function (e) {
     var add = e.target.closest('[data-add-foto]');
-    if (add) { add.closest('.picker').querySelector('input[type=file]').click(); return; }
+    if (add) {
+      add.closest('.picker').querySelector('input[data-entrada="' + add.getAttribute('data-add-foto') + '"]').click();
+      return;
+    }
     var rem = e.target.closest('[data-remover]');
     if (rem) {
       var chave = rem.closest('.picker').getAttribute('data-picker');
@@ -663,15 +703,36 @@ footer .eixo{color:var(--txt)}
 
   document.addEventListener('change', function (e) {
     if (e.target.type !== 'file') return;
-    var chave = e.target.closest('.picker').getAttribute('data-picker');
+    var picker = e.target.closest('.picker');
+    var chave = picker.getAttribute('data-picker');
+    var hint = picker.querySelector('.hint');
     var arquivos = Array.prototype.slice.call(e.target.files);
     e.target.value = '';
     var espaco = LIMITE_FOTOS - pickers[chave].length;
     if (arquivos.length > espaco) aviso('Limite de ' + LIMITE_FOTOS + ' fotos por envio.', true);
-    Promise.all(arquivos.slice(0, Math.max(0, espaco)).map(prepararFoto))
-      .then(function (fotos) { pickers[chave] = pickers[chave].concat(fotos); renderThumbs(chave); })
-      .catch(function (err) { aviso(msgErro(err), true); });
+    arquivos = arquivos.slice(0, Math.max(0, espaco));
+    if (!arquivos.length) return;
+
+    var textoHint = hint.getAttribute('data-texto') || hint.textContent;
+    hint.setAttribute('data-texto', textoHint);
+    hint.textContent = 'Preparando fotos…';
+    fotosEmPreparo++;
+    // Cada foto é tratada separadamente: uma que falhe não descarta as outras.
+    Promise.all(arquivos.map(function (a) {
+      return prepararFoto(a).catch(function (err) { aviso(msgErro(err), true); return null; });
+    })).then(function (fotos) {
+      pickers[chave] = pickers[chave].concat(fotos.filter(Boolean));
+      renderThumbs(chave);
+    }).then(function () {
+      fotosEmPreparo--;
+      hint.textContent = textoHint;
+    });
   });
+
+  function fotosProntas() {
+    if (fotosEmPreparo) aviso('Aguarde as fotos terminarem de carregar.', true);
+    return !fotosEmPreparo;
+  }
 
   // ---------- Indicadores ----------
   function resumo(lista) {
@@ -744,6 +805,7 @@ footer .eixo{color:var(--txt)}
 
   document.getElementById('form-abrir').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (!fotosProntas()) return;
     var btn = document.getElementById('btn-abrir');
     btn.disabled = true;
     btn.textContent = pickers.abrir.length ? 'Enviando fotos…' : 'Abrindo…';
@@ -792,6 +854,7 @@ footer .eixo{color:var(--txt)}
     var promessa, ok;
 
     if (acao === 'responder') {
+      if (!fotosProntas()) return;
       promessa = chamar('responderChamado', id, document.getElementById('resposta').value, pickers.resposta);
       ok = 'Resposta enviada.';
     } else if (acao === 'assumir') {

@@ -31,16 +31,24 @@ const PAPEL = { SOLICITANTE: 'Solicitante', ATENDENTE: 'Atendente' };
 // ---------------------------------------------------------------------------
 
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+  return paginaHtml_()
     .setTitle('Central de chamados · WeAxis')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
+/** Aceita as variações de nome mais comuns do arquivo HTML no editor. */
+function paginaHtml_() {
+  const nomes = ['Index', 'index', 'Index.html', 'index.html'];
+  for (let i = 0; i < nomes.length; i++) {
+    try { return HtmlService.createHtmlOutputFromFile(nomes[i]); } catch (e) {}
+  }
+  throw new Error('Arquivo HTML "Index" não encontrado. No editor, clique no + ao lado de "Arquivos", ' +
+    'escolha HTML, digite Index e cole nele o conteúdo do Index.html.');
+}
+
 /** Rode pelo editor do Apps Script. Cria o que faltar; pode rodar de novo sem perder dados. */
 function setup() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const props = PropertiesService.getScriptProperties();
-  props.setProperty('SPREADSHEET_ID', ss.getId());
+  const ss = planilhaDoSetup_();
 
   prepararAba_(ss, ABA_CHAMADOS, CABECALHO);
   prepararAba_(ss, ABA_MENSAGENS, CABECALHO_MSG);
@@ -57,6 +65,28 @@ function setup() {
   }
 
   pastaFotos_();
+  Logger.log('Pronto. Planilha da Central de Chamados: ' + ss.getUrl());
+}
+
+/**
+ * Script criado pela planilha (Extensões → Apps Script): usa essa planilha.
+ * Script avulso (criado em script.google.com ou pelo Drive): usa a planilha
+ * gravada antes ou cria uma nova no seu Drive.
+ */
+function planilhaDoSetup_() {
+  const props = PropertiesService.getScriptProperties();
+  const ativa = SpreadsheetApp.getActiveSpreadsheet();
+  if (ativa) {
+    props.setProperty('SPREADSHEET_ID', ativa.getId());
+    return ativa;
+  }
+  const id = props.getProperty('SPREADSHEET_ID');
+  if (id) return SpreadsheetApp.openById(id);
+
+  const nova = SpreadsheetApp.create('Central de Chamados - Base');
+  nova.setSpreadsheetTimeZone('America/Sao_Paulo');
+  props.setProperty('SPREADSHEET_ID', nova.getId());
+  return nova;
 }
 
 function prepararAba_(ss, nome, cabecalho) {

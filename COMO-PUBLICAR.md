@@ -24,6 +24,8 @@ Leva uns 10 minutos. Tudo é feito com a conta Google da empresa.
    - na planilha surgem as abas **Chamados**, **Mensagens** e **Config**;
    - no seu Drive surge a pasta **Central de Chamados - Fotos**.
 
+> **Criou o script direto em script.google.com ou pelo Drive, e não pela planilha?** Também funciona. Nesse caso o `setup` cria sozinho uma planilha chamada **Central de Chamados - Base** no seu Drive. O link aparece no **Registro de execução**, na parte de baixo do editor. Configure os temas e atendentes nela (passo 4).
+
 ## 4. Configurar temas e atendentes (aba Config)
 
 - **Coluna A – Temas**: um tema por linha. Já vem com "Abertura de cadastro" e "Assistência técnica"; adicione os outros.
@@ -62,7 +64,11 @@ Pode alterar essa aba a qualquer momento, sem publicar de novo.
 - O solicitante vê **Nova resposta do atendimento** e **Avalie o atendimento**.
 - O atendente vê **Aguardando há…** nos abertos e **Solicitante respondeu** nos que estão em atendimento.
 
-**Fotos:** a página reduz cada foto para no máximo 1600 px antes de enviar, para que o envio seja rápido mesmo no celular. Formatos aceitos: JPG, PNG e WEBP. No celular, o botão **Adicionar fotos** abre a câmera ou a galeria.
+**Fotos:**
+- **No celular:** **Tirar foto** abre a câmera direto e **Adicionar fotos** abre a galeria. No computador aparece só **Adicionar fotos**.
+- **Formatos aceitos:** JPG, PNG, HEIC/HEIF (padrão do iPhone), WEBP, GIF e BMP.
+- **Antes de enviar:** a página converte cada foto para JPG de no máximo 1600 px. Isso deixa o envio rápido e faz a foto abrir em qualquer navegador.
+- **Fotos HEIC fora do Safari:** a conversão usa um componente gratuito (heic2any), carregado da internet só quando aparece uma foto HEIC. Leva 1 ou 2 segundos por foto.
 
 **Indicadores:**
 - **Tempo médio de atendimento:** da abertura até a conclusão.
